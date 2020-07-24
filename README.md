@@ -1,5 +1,5 @@
 # Toy-Horse-Conjoint-Analysis
-In this project, we conducted conjoint analysis to optimize product mix and redesign the product line for a relatively small toy company, EarlyRiders.The datasets available were consumer rating data for different products and product profiles data 
+In this project, we conducted conjoint analysis to optimize product mix and redesign the product line for a small toy company, EarlyRiders.The datasets available were consumer rating data for different products and product profiles data 
 including information about mix of 4 attributes: price, height, motion, and style.  <br>
 
 Tool: R  <br>
