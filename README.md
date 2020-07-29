@@ -10,5 +10,5 @@ Tool: R  <br>
 * conducted a priori segmentation using demographic variables, gender and age; constructed segment-level regression models to profile the attribute preference of each gender-age group  <br>
 * simulated market shares and calculated profit for 14 different product line scenarios considering competitive response and cannibalization; recommended short term and long term product mix  <br>
 
-Outcome: With our modified product mix, the profit will increase by 80% in five years
+Outcome: With our modified product mix, the profit will increase by 80% in five years.
 
