@@ -1,0 +1,235 @@
+---
+title: "HW4 Wine Retailer Case"
+author: "MSMA Team 11"
+date: "2/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls()); gc();
+setwd("~/Desktop/❗️UR/Spring-A/Analytics Design/A4")
+library(dplyr)
+library(tidyr)
+library(data.table)
+library(ggplot2)
+library(grf)
+
+d = read.csv("test_data_1904.csv")
+```
+
+```{r}
+######## Randomization Check ##########
+X <- model.matrix(~chard+sav_blanc+syrah+cab+past_purch+last_purch+visits, data = d)
+X <- X[, 2:ncol(X)]
+randomizationCheck = function(w,X){
+  pvals = numeric(ncol(X))
+  for(i in 1:ncol(X)){
+    slm = summary(lm(X[,i]~w)) 
+    pvals[i] = slm[[4]][2,4] 
+  }
+  data.frame(variable=colnames(X),"p-value"=pvals,"Passed"=ifelse(pvals<.05,"FAILED","passed"))
+}
+rC <- randomizationCheck(d$group,X)
+format(rC,digits=2)
+```
+-All variables passed the randomization check
+
+```{r }
+dt = data.table(d)
+dagg = dt[,.(open = mean(open), click=mean(click), purch = mean(purch),seOpen = sd(open)/sqrt(.N), seClick=sd(click)/sqrt(.N), sePurch = sd(purch)/sqrt(.N),.N),by = .(group)]
+dagg
+
+dodge = position_dodge(width=1); ##to form constant dimensions
+ggplot(aes(x=group,y=purch,ymax=purch+sePurch,ymin=purch-sePurch),data=dagg)+
+  geom_bar(position=dodge,stat="identity",col=2:3,fill=2:3) + 
+  geom_errorbar(position=dodge)
+  labs(x="Group",y="Purchases")
+```
+
+```{r}
+######## Average Causal Effect ##########
+summary(lm(purch~group,data=d))
+summary(lm(purch~group+chard+sav_blanc+syrah+cab+last_purch+visits,data=d))
+```
+ 
+
+
+Below we are going to do Slicing and Dicing:
+```{r}
+############### Recent purchased or not ################
+hist(d$last_purch, 
+     xlab="Days Since Last Purchase", ylab="Customers", 
+     main="Histogram of Days Since Last Purchase")
+d$recentPurch = (d$last_purch < 60)
+dt = data.table(d)
+
+dagg = dt[,.(open = mean(open), click=mean(click), purch = mean(purch),seOpen = sd(open)/sqrt(.N),
+             seClick=sd(click)/sqrt(.N), sePurch = sd(purch)/sqrt(.N),.N), by = .(group, recentPurch)]
+dagg
+dodge = position_dodge(width=1);
+ggplot(aes(fill=group,y=purch,x=recentPurch,ymax=purch+sePurch,ymin=purch-sePurch),data=dagg)+
+    geom_bar(position=dodge,stat="identity") + 
+    geom_errorbar(position=dodge)
+labs(x="Group",y="Purchases")
+```
+-Recent purchesed customers do buy more than not
+-The email seems to produce a stronger effect on purchases for more recent buyers, $2 vs. $1
+-With recent purchased, customers averagely buy (21.03-7.655) than not
+
+```{r}
+############### Syrah purchased or not ################
+d$syrahOrNot = (d$syrah !=0)
+dt = data.table(d)
+dagg = dt[,.(open = mean(open), click=mean(click), purch = mean(purch),seOpen = sd(open)/sqrt(.N), seClick=sd(click)/sqrt(.N), sePurch = sd(purch)/sqrt(.N),.N),by = .(group,syrahOrNot)]
+dagg
+
+dodge = position_dodge(width=1); ##to form constant dimensions
+ggplot(aes(fill=group,y=purch,x=syrahOrNot,ymax=purch+sePurch,ymin=purch-sePurch),data=dagg)+
+  geom_bar(position=dodge,stat="identity") + 
+  geom_errorbar(position=dodge)
+  labs(x="Group",y="Purchases")
+```
+-Not very significant when send eamil to syrah
+
+```{r}
+############### Chard purchased or not ################
+d$chardOrNot = (d$chard !=0)
+dt = data.table(d)
+dagg = dt[,.(open = mean(open), click=mean(click), purch = mean(purch),seOpen = sd(open)/sqrt(.N), seClick=sd(click)/sqrt(.N), sePurch = sd(purch)/sqrt(.N),.N),by = .(group,chardOrNot)]
+dagg
+
+dodge = position_dodge(width=1); ##to form constant dimensions
+ggplot(aes(fill=group,y=purch,x=chardOrNot,ymax=purch+sePurch,ymin=purch-sePurch),data=dagg)+
+  geom_bar(position=dodge,stat="identity") + 
+  geom_errorbar(position=dodge)
+  labs(x="Group",y="Purchases")
+```
+-recent bought chard would purchase more with email marketing
+-similar difference between ctrl and email
+
+```{r}
+############### Sav_blanc purchased or not ################
+d$savOrNot = (d$sav_blanc !=0)
+dt = data.table(d)
+dagg = dt[,.(open = mean(open), click=mean(click), purch = mean(purch),seOpen = sd(open)/sqrt(.N), seClick=sd(click)/sqrt(.N), sePurch = sd(purch)/sqrt(.N),.N),by = .(group,savOrNot)]
+dagg
+
+dodge = position_dodge(width=1); ##to form constant dimensions
+ggplot(aes(fill=group,y=purch,x=savOrNot,ymax=purch+sePurch,ymin=purch-sePurch),data=dagg)+
+  geom_bar(position=dodge,stat="identity") + 
+  geom_errorbar(position=dodge)
+  labs(x="Group",y="Purchases")
+```
+- increased buying amount
+- 2 times incerased effectiveness
+
+```{r}
+############### Cab purchased or not ################
+d$cabOrNot = (d$cab !=0)
+dt = data.table(d)
+dagg = dt[,.(open = mean(open), click=mean(click), purch = mean(purch),seOpen = sd(open)/sqrt(.N), seClick=sd(click)/sqrt(.N), sePurch = sd(purch)/sqrt(.N),.N),by = .(group,cabOrNot)]
+dagg
+
+dodge = position_dodge(width=1); ##to form constant dimensions
+ggplot(aes(fill=group,y=purch,x=cabOrNot,ymax=purch+sePurch,ymin=purch-sePurch),data=dagg)+
+  geom_bar(position=dodge,stat="identity") + 
+  geom_errorbar(position=dodge)
+  labs(x="Group",y="Purchases")
+```
+-increased effectiveness
+-increased buy amount
+
+```{r}
+############### Frequent purchased or not ################
+hist(d$visits, 
+     xlab="Times of visits", ylab="Customers", 
+     main="Histogram of times of visits")
+d$freq_visitor = (d$visits > 10) # determine if consumer is a recent purchaser
+dt = data.table(d)
+dagg = dt[,.(open = mean(open), click=mean(click), purch = mean(purch),seOpen = sd(open)/sqrt(.N),
+             seClick=sd(click)/sqrt(.N), sePurch = sd(purch)/sqrt(.N),.N),by = .(group, freq_visitor)]
+dagg
+dodge = position_dodge(width=1);
+ggplot(aes(fill=group,y=purch,x=freq_visitor,ymax=purch+sePurch,ymin=purch-sePurch),data=dagg)+
+    geom_bar(position=dodge,stat="identity") + 
+    geom_errorbar(position=dodge)
+labs(x="Group",y="Purchases")
+```
+-increased effectiveness
+-increased buy amount --> $3 vs. $1
+
+
+
+Below we ran serveral conditional casual effect regression:
+```{r}
+summary(lm(purch~recentPurch + group:recentPurch,data=d))
+```
+
+```{r}
+summary(lm(purch~savOrNot + group:savOrNot,data=d))
+```
+
+```{r}
+summary(lm(purch~freq_visitor + group:freq_visitor,data=d))
+```
+
+```{r}
+summary(lm(purch~chardOrNot + group:chardOrNot,data=d))
+```
+
+```{r}
+summary(lm(purch~cabOrNot + group:cabOrNot,data=d))
+```
+
+```{r}
+summary(lm(purch~group*recentPurch,data=d))
+```
+
+
+
+Below we ran casual forest:
+```{r}
+############### Causal Forest ################
+treat <- d$group != 'ctrl' # get email or not is treatment 
+response <- d$purch # response is purchase
+baseline <- d[, c("last_purch", "visits", "chard", "sav_blanc", "syrah", "cab")]
+
+set.seed(1)
+cf <- causal_forest(baseline, response, treat)
+print(cf)
+
+average_treatment_effect(cf, method="AIPW")
+
+# Predict on training data
+d$prediction = predict(cf, d[, c("last_purch", "visits", "chard", "sav_blanc", "syrah", "cab")], estimate.variance = FALSE)
+d$score = d$prediction*0.3 - 0.1
+d$target = d$score > 0
+table(d$target)
+ 
+# Target Percentage
+targets = d[d$target  == TRUE, c('user_id', 'score', 'target')]
+non_targets = d[d$target  == FALSE, c('user_id', 'score', 'target')]
+target_perc <- sum(d$target)/nrow(d$target)
+target_perc
+
+# Summary of baseline variables
+summary(d[d$target == 1, 7:13])
+summary(d[d$target == 0, 7:13])
+```
+
+```{r}
+############### New data prediction method ################
+# new_cust <- data.frame(chard = 45, sav_blanc = 1, syrah = 0, cab = 0, last_purchase = 34, visits = 12)
+# prediction <- predict(cf, d[, c("last_purch", "visits", "chard", "sav_blanc", "syrah", "cab")], estimate.variance = FALSE)
+# score <- prediction*0.3 - 0.1
+# targeting_dec <- score > 0
+```
+
+```{r}
+############### Export csv ################
+target_df <- data.frame(d$user_id, d$score, d$target)
+colnames(target_df) <- c('cus_id', 'score', 'tar_ind')
+write.csv(target_df, file = 'Target_Ind.csv')
+```
+
