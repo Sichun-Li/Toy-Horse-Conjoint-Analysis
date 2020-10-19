@@ -12,3 +12,5 @@ Tool: R  <br>
 
 Outcome: With our modified product mix, the profit will increase by 80% in five years.
 
+http://htmlpreview.github.io/?https://github.com/Sichun-Li/Toy-Horse-Conjoint-Analysis/blob/master/Toy%20Horse.html
+
